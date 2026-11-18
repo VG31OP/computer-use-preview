@@ -54,6 +54,31 @@ class TestPlaywrightHeadless(unittest.TestCase):
                 _, kwargs = mock_playwright.chromium.launch.call_args
                 self.assertFalse(kwargs["headless"])
 
+    @patch("computers.playwright.playwright.sync_playwright")
+    def test_playwright_headless_numeric_and_case(self, mock_sync_playwright):
+        mock_playwright = MagicMock()
+        mock_sync_playwright.return_value.start.return_value = mock_playwright
+
+        # "1" evaluates to True
+        with patch.dict(os.environ, {"PLAYWRIGHT_HEADLESS": "1"}):
+            with PlaywrightComputer(screen_size=(1024, 768)):
+                _, kwargs = mock_playwright.chromium.launch.call_args
+                self.assertTrue(kwargs["headless"])
+
+        # "0" evaluates to False
+        mock_playwright.chromium.launch.reset_mock()
+        with patch.dict(os.environ, {"PLAYWRIGHT_HEADLESS": "0"}):
+            with PlaywrightComputer(screen_size=(1024, 768)):
+                _, kwargs = mock_playwright.chromium.launch.call_args
+                self.assertFalse(kwargs["headless"])
+
+        # Case-insensitive "TRUE" evaluates to True
+        mock_playwright.chromium.launch.reset_mock()
+        with patch.dict(os.environ, {"PLAYWRIGHT_HEADLESS": "TRUE"}):
+            with PlaywrightComputer(screen_size=(1024, 768)):
+                _, kwargs = mock_playwright.chromium.launch.call_args
+                self.assertTrue(kwargs["headless"])
+
 
 if __name__ == "__main__":
     unittest.main()
